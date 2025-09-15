@@ -7,6 +7,9 @@ services:
       - 'MONGO_INITDB_ROOT_USERNAME=root'
     ports:
       - '27017:27017'
+    profiles:
+      - dev
+      - prod
 
   spring-app:
     image: eclipse-temurin:17-jdk
@@ -21,4 +24,6 @@ services:
       - '8080:8080'
     depends_on:
       - mongodb
+    profiles:
+      - dev
 
