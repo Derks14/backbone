@@ -25,5 +25,5 @@ services:
     depends_on:
       - mongodb
     profiles:
-      - dev
+      - prod
 
