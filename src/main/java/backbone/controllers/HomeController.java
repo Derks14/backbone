@@ -21,3 +21,4 @@ public class HomeController {
         return ResponseEntity.ok("Welcome Home Buddy");
     }
 }
+
