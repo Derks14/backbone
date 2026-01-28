@@ -77,17 +77,18 @@ pipeline {
         }
 
         stage("Deploy new JAR + docker compose up") {
-            steps {
-                sh '''
-                    set -e
-                    cp "${BUILT_JAR}" "${DEPLOY_DIR}/target/${JAR_NAME}"
+          steps {
+            sh '''
+              set -e
+              cp target/backbone.jar /srv/backbone/target/backbone.jar
 
-                    cd "${DEPLOY_DIR"
-                    docker compose --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
-                    docker compose ps
-                '''
-            }
+              cd /srv/backbone
+              docker compose --profile prod up -d --remove-orphans
+              docker compose ps
+            '''
+          }
         }
+
 
         stage("Health Check") {
             steps {
