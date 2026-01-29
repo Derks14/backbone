@@ -80,13 +80,12 @@ pipeline {
           steps {
             sh '''
               set -e
-
               mkdir -p "${DEPLOY_DIR}/target" "${DEPLOY_DIR}/backups"
 
-              # copy the jar ( use the jar we found)
+              # Copy built jar to deploy dir with the expected name
               cp "${BUILT_JAR}" "${DEPLOY_DIR}/target/${JAR_NAME}"
 
-              # copy compose file into deploy dir ( so compose can find it)
+              # Copy compose into deploy dir so docker compose can find it
               cp compose.yaml "${DEPLOY_DIR}/compose.yaml"
 
               cd "${DEPLOY_DIR}"
@@ -95,6 +94,7 @@ pipeline {
             '''
           }
         }
+
 
 
         stage("Health Check") {

@@ -5,13 +5,12 @@ services:
     working_dir: /app
     volumes:
       - ./target:/app
-    command: java -jar backbone.jar
+    command: ["java", "-jar", "/app/backbone.jar"]
     environment:
       - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
     ports:
       - '8000:8000'
-    depends_on:
-      - mongodb
     profiles:
       - prod
 
