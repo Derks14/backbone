@@ -80,11 +80,18 @@ pipeline {
           steps {
             sh '''
               set -e
-              cp target/backbone.jar /srv/backbone/target/backbone.jar
 
-              cd /srv/backbone
-              docker compose --profile prod up -d --remove-orphans
-              docker compose ps
+              mkdir -p "${DEPLOY_DIR}/target" "${DEPLOY_DIR}/backups"
+
+              # copy the jar ( use the jar we found)
+              cp "${BUILT_JAR}" "${DEPLOY_DIR}/target/${JAR_NAME}"
+
+              # copy compose file into deploy dir ( so compose can find it)
+              cp compose.yaml "${DEPLOY_DIR}/compose.yaml"
+
+              cd "${DEPLOY_DIR}"
+              docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
+              docker compose -f compose.yaml ps
             '''
           }
         }
@@ -145,13 +152,13 @@ pipeline {
                         LAST_BACKUP=$(ls -1t "${DEPLOY_DIR}/backups/${JAR_NAME}."* 2>/dev/null | head -n 1)
                         if [ -z "$LAST_BACKUP" ]; then
                           echo "NO_BACKUP"
-                          exit 2
+                          exit 0
                         fi
 
                         echo "Rolling back using $LAST_BACKUP"
                         cp "$LAST_BACKUP" "${DEPLOY_DIR}/target/${JAR_NAME}"
 
-                        docker compose --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
+                        docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
 
                         # Re-check health after rollback
                         for i in $(seq 1 20); do
@@ -164,7 +171,7 @@ pipeline {
                         done
 
                         echo "ROLLBACK_FAILED"
-                        exit 1
+                        exit 0
                       ''',
                       returnStdout: true
                     ).trim()
@@ -203,7 +210,7 @@ pipeline {
               sh '''
                 set +e
                 cd "${DEPLOY_DIR}" || exit 0
-                docker compose ps
+                docker compose -f compose.yaml ps || true
                 docker logs --tail=200 spring-backbone || true
               '''}
     }
