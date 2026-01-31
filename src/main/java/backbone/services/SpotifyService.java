@@ -83,7 +83,7 @@ public class SpotifyService {
         return token;
     }
 
-    @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
+//    @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
     public CurrentlyPlaying retrieveCurrentlyPlaying() {
         log.info("about to retrieve currently playing from spotify");
 
