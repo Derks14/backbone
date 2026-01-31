@@ -95,7 +95,7 @@ pipeline {
               cp compose.yaml "${DEPLOY_DIR}/compose.yaml"
 
               cd "${DEPLOY_DIR}"
-              ls -la
+              ls -la *
               docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
               docker compose -f compose.yaml ps
             '''
@@ -168,7 +168,7 @@ pipeline {
                         docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
 
                         # Re-check health after rollback
-                        for i in $(seq 1 20); do
+                        for i in $(seq 1 3); do
                           curl -fsS "${HEALTH_URL}" | grep -q '"status":"UP"'
                           if [ $? -eq 0 ]; then
                             echo "ROLLBACK_OK"
@@ -183,33 +183,33 @@ pipeline {
                       returnStdout: true
                     ).trim()
 
-                    withCredentials([string(credentialsId: 'discord_webhook', variable: 'DISCORD_WEBHOOK')]) {
-                              if (rolledBack.contains("NO_BACKUP")) {
-                                sh '''
-                                  set -e
-                                  MSG="❌ Deploy FAILED and NO BACKUP found to rollback. Check Jenkins logs + container logs."
-                                  curl -fsS -H "Content-Type: application/json" \
-                                    -d "{\"content\":\"${MSG}\"}" \
-                                    "$DISCORD_WEBHOOK" >/dev/null
-                                '''
-                              } else if (rolledBack.contains("ROLLBACK_OK")) {
-                                sh '''
-                                  set -e
-                                  MSG="⚠️ Deploy FAILED, but ROLLBACK SUCCEEDED. Service is back UP on ${HEALTH_URL}."
-                                  curl -fsS -H "Content-Type: application/json" \
-                                    -d "{\"content\":\"${MSG}\"}" \
-                                    "$DISCORD_WEBHOOK" >/dev/null
-                                '''
-                              } else {
-                                sh '''
-                                  set -e
-                                  MSG="🛑 Deploy FAILED and ROLLBACK FAILED. Immediate attention required."
-                                  curl -fsS -H "Content-Type: application/json" \
-                                    -d "{\"content\":\"${MSG}\"}" \
-                                    "$DISCORD_WEBHOOK" >/dev/null
-                                '''
-                              }
-                    }
+//                     withCredentials([string(credentialsId: 'discord_webhook', variable: 'DISCORD_WEBHOOK')]) {
+//                               if (rolledBack.contains("NO_BACKUP")) {
+//                                 sh '''
+//                                   set -e
+//                                   MSG="❌ Deploy FAILED and NO BACKUP found to rollback. Check Jenkins logs + container logs."
+//                                   curl -fsS -H "Content-Type: application/json" \
+//                                     -d "{\"content\":\"${MSG}\"}" \
+//                                     "$DISCORD_WEBHOOK" >/dev/null
+//                                 '''
+//                               } else if (rolledBack.contains("ROLLBACK_OK")) {
+//                                 sh '''
+//                                   set -e
+//                                   MSG="⚠️ Deploy FAILED, but ROLLBACK SUCCEEDED. Service is back UP on ${HEALTH_URL}."
+//                                   curl -fsS -H "Content-Type: application/json" \
+//                                     -d "{\"content\":\"${MSG}\"}" \
+//                                     "$DISCORD_WEBHOOK" >/dev/null
+//                                 '''
+//                               } else {
+//                                 sh '''
+//                                   set -e
+//                                   MSG="🛑 Deploy FAILED and ROLLBACK FAILED. Immediate attention required."
+//                                   curl -fsS -H "Content-Type: application/json" \
+//                                     -d "{\"content\":\"${MSG}\"}" \
+//                                     "$DISCORD_WEBHOOK" >/dev/null
+//                                 '''
+//                               }
+//                     }
             }
         }
 
