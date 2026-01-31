@@ -89,7 +89,7 @@ pipeline {
               cp compose.yaml "${DEPLOY_DIR}/compose.yaml"
 
               cd "${DEPLOY_DIR}"
-              docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up --remove-orphans
+              docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
               docker compose -f compose.yaml ps
             '''
           }
