@@ -211,7 +211,7 @@ pipeline {
                 set +e
                 cd "${DEPLOY_DIR}" || exit 0
                 docker compose -f compose.yaml ps || true
-                docker logs --tail=200 spring-backbone || true
+                docker logs --tail=1000 spring-backbone || true
               '''}
     }
 }
