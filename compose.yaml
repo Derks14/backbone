@@ -4,8 +4,8 @@ services:
     container_name: spring-backbone
     working_dir: /app
     volumes:
-      - /srv/backbone/target:/app
-    command: ["java", "-jar", "backbone.jar"]
+      - ./target:/app
+    command: ["java", "-jar", "/app/backbone.jar"]
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
