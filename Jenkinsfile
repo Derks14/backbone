@@ -89,6 +89,7 @@ pipeline {
               cp compose.yaml "${DEPLOY_DIR}/compose.yaml"
 
               cd "${DEPLOY_DIR}"
+              ls -la
               docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
               docker compose -f compose.yaml ps
             '''
@@ -103,13 +104,13 @@ pipeline {
                     def ok = sh(
                         script: '''
                             set +e
-                            for i in $(seq 1 20); do
+                            for i in $(seq 1 3); do
                                 curl -fsS "${HEALTH_URL}" | grep -q '"status":"UP"'
                                 if [ $? -eq 0 ]; then
                                     echo "UP"
                                     exit 0
                                 fi
-                                echo "Waiting for app... ($i/20)"
+                                echo "Waiting for app... ($i/3)"
                                 sleep 3
                             done
                             echo "DOWN"

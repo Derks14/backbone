@@ -4,7 +4,7 @@ services:
     container_name: spring-backbone
     working_dir: /app
     volumes:
-      - ./target:/app
+      - /srv/backbone/target:/app
     command: ["java", "-jar", "/app/backbone.jar"]
     environment:
       - SPRING_PROFILES_ACTIVE=prod
