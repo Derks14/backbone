@@ -1,6 +1,9 @@
 pipeline {
-    agent any
-
+    agent {
+        node {
+            label 'docker-agent-alpine'
+            }
+      }
     environment {
         DEPLOY_DIR = "/srv/backbone"
         JAR_NAME = "backbone.jar"
