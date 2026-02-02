@@ -138,10 +138,10 @@ pipeline {
             withCredentials([string(credentialsId: 'discord_webhook', variable: 'DISCORD_WEBHOOK')]) {
                     sh '''
                         set -e
-                        MSG="✅ Deploy SUCCESS: backbone is healthy on ${HEALTH_URL}"
+                        MSG="✅ Deploy SUCCESS: backbone is healthy on http://127.0.0.1:8000/actuator/health"
                         curl -fsS -H "Content-Type: application/json" \
-                            -d "{\"content\":\"${MSG}\"}" \
-                            "$DISCORD_WEBHOOK" >/dev/null
+                             -d "{\\"content\\":\\"${MSG}\\"}" \
+                             ${DISCORD_WEBHOOK}
                     '''
             }
         }
@@ -194,19 +194,19 @@ pipeline {
                                 '''
                               } else if (rolledBack.contains("ROLLBACK_OK")) {
                                 sh '''
-                                  set -e
-                                  MSG="⚠️ Deploy FAILED, but ROLLBACK SUCCEEDED. Service is back UP on ${HEALTH_URL}."
-                                  curl -fsS -H "Content-Type: application/json" \
-                                    -d "{\"content\":\"${MSG}\"}" \
-                                    "$DISCORD_WEBHOOK" >/dev/null
+                                    set -e
+                                    MSG="⚠️ Deploy FAILED, but ROLLBACK SUCCEEDED. Service is back UP on http://127.0.0.1:8000/actuator/health."
+                                    curl -fsS -H "Content-Type: application/json" \
+                                         -d "{\\"content\\":\\"${MSG}\\"}" \
+                                         ${DISCORD_WEBHOOK}
                                 '''
                               } else {
                                 sh '''
-                                  set -e
-                                  MSG="🛑 Deploy FAILED and ROLLBACK FAILED. Immediate attention required."
-                                  curl -fsS -H "Content-Type: application/json" \
-                                    -d "{\"content\":\"${MSG}\"}" \
-                                    "$DISCORD_WEBHOOK" >/dev/null
+                                    set -e
+                                    MSG="🚨 Deploy AND Rollback FAILED! Manual intervention required."
+                                    curl -fsS -H "Content-Type: application/json" \
+                                         -d "{\\"content\\":\\"${MSG}\\"}" \
+                                         ${DISCORD_WEBHOOK}
                                 '''
                               }
                     }
