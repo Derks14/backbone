@@ -11,20 +11,20 @@ import java.util.List;
 @Value
 public class CopyDto {
     @NotBlank
-    private Category category;
+    Category category;
 
     @NotBlank
-    private String title;
+    String title;
 
     @NotBlank
-    private String description;
+    String description;
 
     @NotEmpty
-    private List<String> tags;
+    List<String> tags;
 
     @NotBlank
-    private String icon;
+    String icon;
 
     @NotBlank
-    private CopyStatus status;
+    CopyStatus status;
 }

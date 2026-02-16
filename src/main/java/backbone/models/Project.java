@@ -1,16 +1,15 @@
 package backbone.models;
 
 import backbone.models.records.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 
+@EqualsAndHashCode(callSuper = true)
 @Document
 @AllArgsConstructor
+@Data
 @NoArgsConstructor
 public class Project extends Copy {
     Hero hero;

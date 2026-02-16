@@ -3,6 +3,7 @@ package backbone.services;
 import backbone.configs.BackboneException;
 import backbone.dto.*;
 import backbone.models.Copy;
+import backbone.models.records.CopyStatus;
 import backbone.repositories.CopyRepository;
 import com.mongodb.DuplicateKeyException;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,9 @@ public class CopyService {
         log.info("[{}] processing request to fetch copies ", sessionId);
 
         PageRequest pageRequest = PageRequest.of(request.page(), request.size());
+
+        // when you add authentication
+        // add option where everyone sees published copies and authenticated users see published items
 
         Page<Copy> copiesInPages;
 
@@ -66,12 +70,12 @@ public class CopyService {
                 .title(copyDto.getTitle())
                 .icon(copyDto.getIcon())
                 .tags(copyDto.getTags())
-                .status(copyDto.getStatus())
+                .status(CopyStatus.DRAFT)
                 .description(copyDto.getDescription())
                 .category(copyDto.getCategory())
                 .build();
         try {
-            copyRepository.insert(copy);
+           copy = copyRepository.insert(copy);
         } catch (DuplicateKeyException e) {
             log.error("[{}] duplicate key exception : {}", sessionId, e.getMessage());
             throw new BackboneException("", HttpStatus.CONFLICT, "copy with title already exists", e.getCause());
@@ -98,13 +102,13 @@ public class CopyService {
 
         newCopy.setId(copy.getId());
 
-        copyRepository.save(newCopy);
+        copy = copyRepository.save(newCopy);
 
         log.info("[{}] new copy updated successfully ", sessionId);
 
         // go ahead and delete cache
 
-        return newCopy;
+        return copy;
     }
 
     public Copy getCopy(String id, String sessionId) {
