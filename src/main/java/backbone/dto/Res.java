@@ -24,4 +24,12 @@ public class Res<T> {
         this.path = path;
         this.timestamp = Instant.now();
     }
+
+    public Res(String message, T data,  String path) {
+        this.message = message;
+        this.data = data;
+        this.path = path;
+        this.timestamp = Instant.now();
+    }
+
 }

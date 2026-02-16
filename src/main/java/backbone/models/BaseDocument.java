@@ -9,6 +9,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.TextScore;
 
 import java.time.LocalDateTime;
 
@@ -36,4 +37,7 @@ public abstract class BaseDocument {
     public ObjectId oid() {
         return new ObjectId(this.id);
     }
+
+    @TextScore
+    Float score;
 }
