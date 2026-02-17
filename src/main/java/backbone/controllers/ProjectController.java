@@ -42,7 +42,7 @@ public class ProjectController {
                 .build();
 
         Res<List<Project>> response =projectService.fetchProjects(projectRequest, sessionId);
-
+        response.setTimestamp(Instant.now());
         return ResponseEntity.ok(response);
     }
 

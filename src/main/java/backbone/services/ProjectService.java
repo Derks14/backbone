@@ -10,6 +10,9 @@ import backbone.repositories.ProjectRepository;
 import com.mongodb.DuplicateKeyException;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraintvalidators.RegexpURLValidator;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -34,6 +37,7 @@ public class ProjectService {
     }
 
 
+    @Cacheable(value = "projects")
     public Res<List<Project>> fetchProjects(FetchProjectRequest request, String sessionId) {
         log.info("[{}] processing request to fetch projects ", sessionId);
         PageRequest pageRequest = PageRequest.of(request.getPage(), request.getSize());
@@ -64,11 +68,11 @@ public class ProjectService {
                 .message("projects fetched successfully")
                 .data(projects)
                 .pagination(paginationMeta)
-                .timestamp(Instant.now())
                 .build();
     }
 
 
+    @Cacheable(value = "projects", key = "#id")
     public Project fetchProject(String id, String sessionId) {
         log.info("[{}] processing request to fetch single project ", sessionId);
         Project project = projectRepository.findById(id)
@@ -98,6 +102,7 @@ public class ProjectService {
     }
 
 
+    @CachePut(value = "projects", key = "#id")
     public Project updateProject(Project newData, String id, String sessionId) {
         log.info("[{}] processing update request to update project ", sessionId);
 
@@ -137,6 +142,7 @@ public class ProjectService {
         return project;
     }
 
+    @CacheEvict(value = "projects", key = "#id")
     public Res deleteProject(String id, String sessionId) {
         log.info("[{}] processing request to delete project ", sessionId);
 
