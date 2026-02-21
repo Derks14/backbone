@@ -84,7 +84,7 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping
+    @DeleteMapping("{id}")
     public ResponseEntity<Res> deleteMapping(@PathVariable String id, HttpServletRequest request) {
         String sessionId = request.getSession().getId();
         log.info("[{}] request to delete project ", sessionId);

@@ -5,12 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.validation.FieldError;
-
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.BindException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.View;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.net.URI;
 import java.nio.file.AccessDeniedException;
@@ -18,21 +20,13 @@ import java.nio.file.AccessDeniedException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
-//
-////    private final View error;
-//
-//    public GlobalExceptionHandler(View error) {
-//        this.error = error;
-//    }
 
-    // use this base for all exceptions
     private ProblemDetail base(
             HttpStatus status,
             String title,
-           Exception  exception,
+            Exception exception,
             HttpServletRequest request
     ) {
-
         ProblemDetail problemDetail = ProblemDetail.forStatus(status);
         problemDetail.setTitle(title);
         problemDetail.setDetail(exception.getMessage());
@@ -44,26 +38,20 @@ public class GlobalExceptionHandler {
         return problemDetail;
     }
 
-
     @ExceptionHandler(BackboneException.class)
-    public ResponseEntity<ProblemDetail> handleBackboneExceptions(BackboneException exception, HttpServletRequest request){
+    public ResponseEntity<ProblemDetail> handleBackboneExceptions(BackboneException exception, HttpServletRequest request) {
         String name = exception.getClass().getSimpleName();
         String sessionId = request.getSession().getId();
 
-        // create problem for the error
         ProblemDetail problemDetail = this.base(exception.getHttpStatus(), name, exception, request);
-
         problemDetail.setProperty("code", exception.getCode());
+
         log.info("[{}] Handled {} code={} status={} path={} cid={} ",
                 sessionId, name, exception.getCode(), exception.getHttpStatus(), request.getRequestURI(), MDC.get("correlationId"));
 
         return ResponseEntity.status(exception.getHttpStatus()).body(problemDetail);
-
-        // add more details, if its a validation error
     }
 
-
-    //handling auth exceptions
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleAccessDenied(Exception exception, HttpServletRequest request) {
         ProblemDetail problemDetail = this.base(HttpStatus.FORBIDDEN, "access_denied", exception, request);
@@ -72,12 +60,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problemDetail);
     }
 
+    @ExceptionHandler({
+            MethodArgumentTypeMismatchException.class,
+            MethodArgumentNotValidException.class,
+            MissingServletRequestParameterException.class,
+            BindException.class,
+            HttpMessageNotReadableException.class
+    })
+    public ResponseEntity<ProblemDetail> handleBadRequest(Exception exception, HttpServletRequest request) {
+        ProblemDetail problemDetail = this.base(HttpStatus.BAD_REQUEST, "bad request", exception, request);
+        problemDetail.setProperty("code", "bad_request");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
+    }
+
     public ResponseEntity<ProblemDetail> handleUnauth(Exception exception, HttpServletRequest request) {
         ProblemDetail problemDetail = this.base(HttpStatus.UNAUTHORIZED, "unauthorised", exception, request);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
-
     }
-
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnknown(Exception exception, HttpServletRequest request) {
@@ -90,8 +89,4 @@ public class GlobalExceptionHandler {
         problemDetail.setProperty("code", "internal_server_error");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
     }
-
-
-
-
 }

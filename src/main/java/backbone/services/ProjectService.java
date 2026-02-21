@@ -53,7 +53,7 @@ public class ProjectService {
                 TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny(request.getSearch());
 
                 Sort sort = Sort.by("score");
-                pageRequest.withSort(sort);
+                pageRequest = pageRequest.withSort(sort);
                 projectsInPages = projectRepository.findAllBy(criteria, pageRequest);
             }
         } catch (Exception e) {

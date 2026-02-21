@@ -1,13 +1,14 @@
 package backbone;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootTest
+import static org.assertj.core.api.Assertions.assertThat;
+
 class BackboneApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
-
+    @Test
+    void applicationShouldDeclareSpringBootApplicationAnnotation() {
+        assertThat(Application.class.isAnnotationPresent(SpringBootApplication.class)).isTrue();
+    }
 }
