@@ -9,6 +9,7 @@ import backbone.models.Project;
 import backbone.services.ProjectService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +39,7 @@ public class ProjectController {
         FetchProjectRequest projectRequest = FetchProjectRequest.builder()
                 .page(page)
                 .size(size)
-                .search(search)
+                .search(Strings.trimToNull(search))
                 .build();
 
         Res<List<Project>> response =projectService.fetchProjects(projectRequest, sessionId);

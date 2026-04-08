@@ -43,10 +43,10 @@ public class GlobalExceptionHandler {
         String name = exception.getClass().getSimpleName();
         String sessionId = request.getSession().getId();
 
-        ProblemDetail problemDetail = this.base(exception.getHttpStatus(), name, exception, request);
+        ProblemDetail problemDetail = this.base(exception.getHttpStatus(), exception.getCode(), exception, request);
         problemDetail.setProperty("code", exception.getCode());
 
-        log.info("[{}] Handled {} code={} status={} path={} cid={} ",
+        log.error("[{}] Handled {} code={} status={} path={} cid={} ",
                 sessionId, name, exception.getCode(), exception.getHttpStatus(), request.getRequestURI(), MDC.get("correlationId"));
 
         return ResponseEntity.status(exception.getHttpStatus()).body(problemDetail);

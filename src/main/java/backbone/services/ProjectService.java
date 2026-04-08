@@ -5,7 +5,7 @@ import backbone.dto.*;
 import backbone.models.Category;
 import backbone.models.Copy;
 import backbone.models.Project;
-import backbone.models.records.CopyStatus;
+import backbone.models.records.*;
 import backbone.repositories.ProjectRepository;
 import com.mongodb.DuplicateKeyException;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,7 +38,7 @@ public class ProjectService {
     }
 
 
-    @Cacheable(value = "projects")
+//    @Cacheable(value = "projects")
     public Res<List<Project>> fetchProjects(FetchProjectRequest request, String sessionId) {
         log.info("[{}] processing request to fetch projects ", sessionId);
         PageRequest pageRequest = PageRequest.of(request.getPage(), request.getSize());
@@ -64,6 +65,8 @@ public class ProjectService {
 
         List<Project> projects = projectsInPages.getContent();
 
+        log.info("[{}] projects fetched successfully: pagination {}. data: {} ", sessionId, paginationMeta, projects.toString());
+
         return Res.<List<Project>>builder()
                 .message("projects fetched successfully")
                 .data(projects)
@@ -72,11 +75,14 @@ public class ProjectService {
     }
 
 
-    @Cacheable(value = "projects", key = "#id")
+//    @Cacheable(value = "projects", key = "#id")
     public Project fetchProject(String id, String sessionId) {
         log.info("[{}] processing request to fetch single project ", sessionId);
         Project project = projectRepository.findById(id)
-                .orElseThrow( () -> new BackboneException("", HttpStatus.NOT_FOUND, "project with id: %s ".formatted(id)));
+                .orElseThrow( () -> new BackboneException(HttpStatus.NOT_FOUND.getReasonPhrase(),
+                        HttpStatus.NOT_FOUND,
+                        "Project with ID [%s] could not be found ".formatted(id))
+                );
         log.info("[{}] project with title: {}. found successfully ", sessionId, project.getTitle());
         return project;
     }
@@ -90,6 +96,39 @@ public class ProjectService {
         newProject.setDescription(projectDto.getDescription());
         newProject.setCategory(Category.PROJECT);
 
+        // build new hero object for project. set empty array for array fields
+        Hero hero = Hero.builder()
+                .techStack(new ArrayList<>())
+                .build();
+        newProject.setHero(hero);
+
+
+        // create new problem statement object with empty constraints array
+        ProblemStatement problemStatement = ProblemStatement.builder()
+                .constraints(new ArrayList<>())
+                .build();
+        newProject.setProblemStatement(problemStatement);
+
+        newProject.setEngineeringDecision(new ArrayList<>());
+
+
+        ImplementationHighlights implementationHighlights = ImplementationHighlights.builder()
+                .apiDesign(new ArrayList<>())
+                .apiDesign(new ArrayList<>())
+                .build();
+        newProject.setImplementationHighlights(implementationHighlights);
+
+        // set the outcomes and learnings
+        OutcomesAndLearnings outcomesAndLearnings = OutcomesAndLearnings.builder()
+                .whatBroke(new ArrayList<>())
+                .whatWorked(new ArrayList<>())
+                .futureImprovements(new ArrayList<>())
+                .build();
+
+        newProject.setOutcomesAndLearnings(outcomesAndLearnings);
+
+
+
         try{
             newProject = projectRepository.insert(newProject);
         } catch (DuplicateKeyException duplicateKeyException) {
@@ -102,12 +141,12 @@ public class ProjectService {
     }
 
 
-    @CachePut(value = "projects", key = "#id")
+//    @CachePut(value = "projects", key = "#id")
     public Project updateProject(Project newData, String id, String sessionId) {
         log.info("[{}] processing update request to update project ", sessionId);
 
         Project project = projectRepository.findById(id)
-                .orElseThrow( () -> new BackboneException(" ", HttpStatus.NOT_FOUND, "project with id: s%, could not be found") );
+                .orElseThrow( () -> new BackboneException(HttpStatus.NOT_FOUND.getReasonPhrase(), HttpStatus.NOT_FOUND, "could not find project with id: %s" ) );
 
         try {
             project.setTitle(newData.getTitle());
@@ -136,13 +175,16 @@ public class ProjectService {
         log.info("[{}] processing request to get single project ", sessionId);
 
         Project project = projectRepository.findById(id)
-                .orElseThrow( () -> new BackboneException("", HttpStatus.NOT_FOUND, "project with id: %s, could not be found".formatted(id) ));
+                .orElseThrow( () -> new BackboneException(HttpStatus.NOT_FOUND.getReasonPhrase(),
+                        HttpStatus.NOT_FOUND,
+                        "COULD NOT FIND PROJECT WITH ID - %s".formatted(id)
+                ));
 
         log.info("[{}] project found and returned ", sessionId);
         return project;
     }
 
-    @CacheEvict(value = "projects", key = "#id")
+//    @CacheEvict(value = "projects", key = "#id")
     public Res deleteProject(String id, String sessionId) {
         log.info("[{}] processing request to delete project ", sessionId);
 
@@ -153,7 +195,7 @@ public class ProjectService {
         projectRepository.delete(project);
 
         log.info("[{}] project deleted successfully", sessionId);
-        return Res.builder().message("project details deleted successfyully").build();
+        return Res.builder().message("project details deleted successfully").build();
 
     }
 }
