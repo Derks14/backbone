@@ -12,14 +12,20 @@ import java.util.List;
 @AllArgsConstructor
 public class Episode extends Item {
 
+    @JsonProperty("audio_preview_url")
+    private String audioPreviewUrl;
+
     private String description;
 
+    @JsonProperty("html_description")
     private String html_description;
 
     private List<Image> images;
 
+    @JsonProperty("is_externally_hosted")
     private boolean isExternallyHosted;
 
+    @JsonProperty("is_playable")
     private boolean isPlayable;
 
     private List<String> languages;
@@ -32,6 +38,7 @@ public class Episode extends Item {
     @JsonProperty("release_date_precision")
     private String releaseDatePrecision;
 
+    @JsonProperty("resume_point")
     private ResumePoint resumePoint;
 
     private Show show;

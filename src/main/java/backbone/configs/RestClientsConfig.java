@@ -20,7 +20,7 @@ public class RestClientsConfig {
 
     @Bean
     public RestClient spotifyAccountsClient() {
-        String BASE_URL = "https://accounts.spotify.com/authorize";
+        String BASE_URL = "https://accounts.spotify.com/api/token";
 
         return RestClient.builder()
                 .baseUrl(BASE_URL)

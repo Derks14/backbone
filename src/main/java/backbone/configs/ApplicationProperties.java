@@ -14,5 +14,6 @@ public class ApplicationProperties {
 
     private String spotifyClientId;
     private String spotifyClientSecret;
+    private String spotifyRedirectUri;
 
 }
