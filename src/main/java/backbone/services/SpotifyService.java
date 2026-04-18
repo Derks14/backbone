@@ -8,6 +8,8 @@ import backbone.models.spotify.SpotifyAuthorisationToken;
 import backbone.models.spotify.SpotifyToken;
 import backbone.models.spotify.QueueResponse;
 import backbone.repositories.SpotifyAuthorisationTokenRepo;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
@@ -192,7 +194,7 @@ public class SpotifyService {
         return response;
     }
 
-    @Cacheable(value = "spotify", key = "'queue'", unless = "true")
+    @Cacheable(value = "spotify", key = "'currentQueue'", unless = "true")
     public Res<QueueResponse> retrieveUserQueue() {
         log.info("retrieving current user queue");
 
@@ -216,8 +218,26 @@ public class SpotifyService {
         if (Objects.isNull(userQueue) || Objects.isNull(userQueue.getCurrentlyPlaying())) {
             log.info("users spotify is idle at the moment");
             response.setMessage("user's spotify is currently idle");
+
+            Object cachedResponseObject = this.redisTemplate.opsForValue().get("spotify::lastQueue");
+
+            if (Objects.isNull(cachedResponseObject)) throw new BackboneException(
+                    HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                    HttpStatus.INTERNAL_SERVER_ERROR, "we have nothing saved in our cache");
+
+            ObjectMapper mapper = new ObjectMapper();
+
+            Res<QueueResponse> cachedResponse = mapper.convertValue(cachedResponseObject, new TypeReference<Res<QueueResponse>>() {
+            });
+            Duration expiry = Duration.ofMillis(cachedResponse.getData().getCurrentlyPlaying().getDurationMs()).minusSeconds(90);
+
+            this.redisTemplate.opsForValue().set("spotify::currentQueue", cachedResponse, expiry);
+
+
         } else {
-            cacheItem("queue", response, Duration.ofMillis(userQueue.getCurrentlyPlaying().getDurationMs()));
+            Duration expiry = Duration.ofMillis(userQueue.getCurrentlyPlaying().getDurationMs()).minusSeconds(60);
+            cacheItem("currentQueue", response, expiry);
+            cacheItemWithExpiry("lastQueue", response);
         }
         log.info("user active queue successfully retrieved");
         return response;
@@ -225,6 +245,10 @@ public class SpotifyService {
 
     private void cacheItem(String key, Object value, Duration ttl) {
         this.redisTemplate.opsForValue().set("spotify::"+ key, value, ttl);
+    }
+
+    private void cacheItemWithExpiry(String key, Object value) {
+        this.redisTemplate.opsForValue().set("spotify::"+ key, value);
     }
 
     private String buildBase64String( ) {

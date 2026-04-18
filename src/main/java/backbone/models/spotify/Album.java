@@ -19,7 +19,9 @@ public class Album {
     @JsonProperty("total_tracks")
     private int totalTracks;
 
-    private List<String> available_markets;
+    @JsonProperty("available_markets")
+    @Getter(AccessLevel.NONE)
+    private List<String> availableMarkets;
 
     @JsonProperty("external_urls")
     private ExternalUrls externalUrls;
@@ -28,8 +30,10 @@ public class Album {
 
     private String name;
 
+    @JsonProperty("release_date")
     private String releaseDate;
 
+    @JsonProperty("release_date_precision")
     private String releaseDatePrecision;
 
     private Restrictions restrictions;

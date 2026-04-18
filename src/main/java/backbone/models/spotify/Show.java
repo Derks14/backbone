@@ -13,6 +13,7 @@ import java.util.List;
 public class Show {
 
     @JsonProperty("available_markets")
+    @Getter(AccessLevel.NONE)
     private List<String> availableMarkets;
     private String description;
 

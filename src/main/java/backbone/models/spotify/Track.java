@@ -15,6 +15,7 @@ public class Track extends Item {
     private List<Artist> artists;
 
     @JsonProperty("available_markets")
+    @Getter(AccessLevel.NONE)
     private List<String> availableMarkets;
 
     @JsonProperty("disc_number")
