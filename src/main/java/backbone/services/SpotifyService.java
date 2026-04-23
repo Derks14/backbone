@@ -29,9 +29,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -164,8 +162,8 @@ public class SpotifyService {
     }
 
 //    @Scheduled(fixedDelay = 30, timeUnit = TimeUnit.MINUTES)
-    public Res<CurrentlyPlaying> retrieveCurrentlyPlaying() {
-        log.info("about to retrieve currently playing from spotify");
+    public Res<CurrentlyPlaying> retrieveCurrentlyPlaying(String sessionId) {
+        log.info("[{}] about to retrieve currently playing from spotify", sessionId);
 
         SpotifyToken spotifyToken = generateActiveToken();
 
@@ -178,7 +176,7 @@ public class SpotifyService {
                 .onStatus(HttpStatusCode::isError, SpotifyService::unknownError)
                 .body(CurrentlyPlaying.class);
 
-        log.info("currently playing song has been retrieved");
+        log.info("[{}] currently playing song has been retrieved", sessionId);
 
 
 
@@ -195,7 +193,7 @@ public class SpotifyService {
     }
 
     @Cacheable(value = "spotify", key = "'currentQueue'", unless = "true")
-    public Res<QueueResponse> retrieveUserQueue() {
+    public Res<QueueResponse> retrieveUserQueue(String sessionId) {
         log.info("retrieving current user queue");
 
 
@@ -216,7 +214,7 @@ public class SpotifyService {
                 .build();
 
         if (Objects.isNull(userQueue) || Objects.isNull(userQueue.getCurrentlyPlaying())) {
-            log.info("users spotify is idle at the moment");
+            log.info("[{}] users spotify is idle at the moment", sessionId);
             response.setMessage("user's spotify is currently idle");
 
             Object cachedResponseObject = this.redisTemplate.opsForValue().get("spotify::lastQueue");
@@ -239,7 +237,7 @@ public class SpotifyService {
             cacheItem("currentQueue", response, expiry);
             cacheItemWithExpiry("lastQueue", response);
         }
-        log.info("user active queue successfully retrieved");
+        log.info("[{}] user active queue successfully retrieved", sessionId);
         return response;
     }
 

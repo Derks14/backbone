@@ -70,7 +70,7 @@ public class SpotifyController {
         String sessionId = request.getSession().getId();
         log.info("[{}] request to get currently playing data from spotify", sessionId);
 
-        Res<CurrentlyPlaying> response = spotifyService.retrieveCurrentlyPlaying();
+        Res<CurrentlyPlaying> response = spotifyService.retrieveCurrentlyPlaying(sessionId);
 
         response.setPath(request.getRequestURI());
         response.setTimestamp(Instant.now());
@@ -82,7 +82,7 @@ public class SpotifyController {
         String sessionId = request.getSession().getId();
         log.info("[{}] request to get current queue from spotify", sessionId);
 
-        Res<QueueResponse> response = spotifyService.retrieveUserQueue();
+        Res<QueueResponse> response = spotifyService.retrieveUserQueue(sessionId);
 
         response.setPath(request.getRequestURI());
         response.setTimestamp(Instant.now());
