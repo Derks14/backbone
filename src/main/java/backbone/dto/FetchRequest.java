@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class FetchProjectRequest {
+public class FetchRequest {
     private String search;
     private int page;
     private int size;

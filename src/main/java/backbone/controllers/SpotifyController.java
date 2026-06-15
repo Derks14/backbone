@@ -15,11 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class SpotifyController {
 
-
-
+    @GetMapping
     public ResponseEntity<String> home(HttpServletRequest request){
         String sessionId = request.getSession().getId();
-
         return ResponseEntity.ok("ok spotify");
     }
 

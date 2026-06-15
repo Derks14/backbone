@@ -3,16 +3,11 @@ package backbone.services;
 import backbone.configs.BackboneException;
 import backbone.dto.*;
 import backbone.models.Category;
-import backbone.models.Copy;
 import backbone.models.Project;
 import backbone.models.records.*;
 import backbone.repositories.ProjectRepository;
 import com.mongodb.DuplicateKeyException;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraintvalidators.RegexpURLValidator;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -20,7 +15,6 @@ import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +33,7 @@ public class ProjectService {
 
 
 //    @Cacheable(value = "projects")
-    public Res<List<Project>> fetchProjects(FetchProjectRequest request, String sessionId) {
+    public Res<List<Project>> fetchProjects(FetchRequest request, String sessionId) {
         log.info("[{}] processing request to fetch projects ", sessionId);
         PageRequest pageRequest = PageRequest.of(request.getPage(), request.getSize());
 

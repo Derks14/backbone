@@ -1,7 +1,7 @@
 package backbone.services;
 
 import backbone.configs.BackboneException;
-import backbone.dto.FetchProjectRequest;
+import backbone.dto.FetchRequest;
 import backbone.dto.ProjectDto;
 import backbone.dto.Res;
 import backbone.models.Category;
@@ -68,7 +68,7 @@ class ProjectServiceTest {
 
     @Test
     void fetchProjectsShouldReturnPagedDataWhenSearchIsNull() {
-        FetchProjectRequest request = FetchProjectRequest.builder().page(0).size(2).search(null).build();
+        FetchRequest request = FetchRequest.builder().page(0).size(2).search(null).build();
         Project project = projectWithIdAndTitle("p-1", "Project One");
 
         Page<Project> page = new PageImpl<>(List.of(project), PageRequest.of(0, 2), 3);
@@ -91,7 +91,7 @@ class ProjectServiceTest {
 
     @Test
     void fetchProjectsShouldUseTextSearchAndScoreSortingWhenSearchProvided() {
-        FetchProjectRequest request = FetchProjectRequest.builder().page(1).size(3).search("gen ai").build();
+        FetchRequest request = FetchRequest.builder().page(1).size(3).search("gen ai").build();
         Project project = projectWithIdAndTitle("p-2", "AI Project");
 
         Page<Project> page = new PageImpl<>(List.of(project), PageRequest.of(1, 3), 4);
@@ -113,7 +113,7 @@ class ProjectServiceTest {
 
     @Test
     void fetchProjectsShouldThrowBackboneExceptionWhenRepositoryFails() {
-        FetchProjectRequest request = FetchProjectRequest.builder().page(0).size(5).build();
+        FetchRequest request = FetchRequest.builder().page(0).size(5).build();
         when(projectRepository.findAll(any(Pageable.class))).thenThrow(new RuntimeException("store down"));
 
         assertThatThrownBy(() -> projectService.fetchProjects(request, SESSION_ID))

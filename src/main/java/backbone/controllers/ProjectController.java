@@ -1,10 +1,9 @@
 package backbone.controllers;
 
 
-import backbone.dto.FetchProjectRequest;
+import backbone.dto.FetchRequest;
 import backbone.dto.ProjectDto;
 import backbone.dto.Res;
-import backbone.models.Copy;
 import backbone.models.Project;
 import backbone.services.ProjectService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +35,7 @@ public class ProjectController {
         String sessionId = request.getSession().getId();
         log.info("[{}] new request to fetch projects", sessionId);
 
-        FetchProjectRequest projectRequest = FetchProjectRequest.builder()
+        FetchRequest projectRequest = FetchRequest.builder()
                 .page(page)
                 .size(size)
                 .search(Strings.trimToNull(search))
