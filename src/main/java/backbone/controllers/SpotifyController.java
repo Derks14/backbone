@@ -28,9 +28,9 @@ public class SpotifyController {
         this.spotifyService = spotifyService;
     }
 
+    @GetMapping
     public ResponseEntity<String> home(HttpServletRequest request){
         String sessionId = request.getSession().getId();
-
         return ResponseEntity.ok("ok spotify");
     }
 

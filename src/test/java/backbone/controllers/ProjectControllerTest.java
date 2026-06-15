@@ -2,7 +2,7 @@ package backbone.controllers;
 
 import backbone.configs.BackboneException;
 import backbone.configs.GlobalExceptionHandler;
-import backbone.dto.FetchProjectRequest;
+import backbone.dto.FetchRequest;
 import backbone.dto.ProjectDto;
 import backbone.dto.Res;
 import backbone.models.Project;
@@ -57,7 +57,7 @@ class ProjectControllerTest {
                 .data(List.of(project))
                 .build();
 
-        when(projectService.fetchProjects(any(FetchProjectRequest.class), anyString())).thenReturn(serviceResponse);
+        when(projectService.fetchProjects(any(FetchRequest.class), anyString())).thenReturn(serviceResponse);
 
         mockMvc.perform(get("/api/projects"))
                 .andExpect(status().isOk())
@@ -66,7 +66,7 @@ class ProjectControllerTest {
                 .andExpect(jsonPath("$.data[0].title").value("Project One"))
                 .andExpect(jsonPath("$.timestamp").exists());
 
-        ArgumentCaptor<FetchProjectRequest> requestCaptor = ArgumentCaptor.forClass(FetchProjectRequest.class);
+        ArgumentCaptor<FetchRequest> requestCaptor = ArgumentCaptor.forClass(FetchRequest.class);
         verify(projectService).fetchProjects(requestCaptor.capture(), anyString());
 
         assertThat(requestCaptor.getValue().getPage()).isEqualTo(0);
@@ -81,7 +81,7 @@ class ProjectControllerTest {
                 .data(List.of())
                 .build();
 
-        when(projectService.fetchProjects(any(FetchProjectRequest.class), anyString())).thenReturn(serviceResponse);
+        when(projectService.fetchProjects(any(FetchRequest.class), anyString())).thenReturn(serviceResponse);
 
         mockMvc.perform(get("/api/projects")
                         .param("search", "ai")
@@ -91,7 +91,7 @@ class ProjectControllerTest {
                 .andExpect(jsonPath("$.message").value("projects fetched successfully"))
                 .andExpect(jsonPath("$.data").isArray());
 
-        ArgumentCaptor<FetchProjectRequest> requestCaptor = ArgumentCaptor.forClass(FetchProjectRequest.class);
+        ArgumentCaptor<FetchRequest> requestCaptor = ArgumentCaptor.forClass(FetchRequest.class);
         verify(projectService).fetchProjects(requestCaptor.capture(), anyString());
 
         assertThat(requestCaptor.getValue().getSearch()).isEqualTo("ai");
