@@ -8,10 +8,19 @@ services:
     command: ["java", "-jar", "/app/backbone.jar"]
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI}
+      - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - '8000:8000'
+    networks:
+      - dbnet
     profiles:
       - prod
+
+networks:
+  dbnet:
+    external: true
+
+
 
 
