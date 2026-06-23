@@ -49,11 +49,12 @@ pipeline {
                     set -e
                     JAR=""
                     if ls target/*.jar > /dev/null 2>&1; then
-                        JAR=$(ls -1 target/*.jar | head -n 1)
+                        JAR=$(find target -maxdepth 1 -type f -name "*.jar" ! -name "*.original" | head -n 1)
                     elif ls build/libs/*.jar > /dev/null 2>&1; then
-                        JAR=$(ls -1 build/libs/*.jar | head -n 1)
+                        JAR=$(find build/libs -maxdepth 1 -type f -name "*.jar" ! -name "*-plain.jar" | head -n 1)
                     fi
                     [ -n "$JAR" ] || (echo "Could not find built jar in target/ or build/libs/" && exit 1)
+                    jar tf "$JAR" | grep -q '^BOOT-INF/lib/' || (echo "Built artifact is not an executable Spring Boot jar: $JAR" && exit 1)
                     echo "$JAR"
                 ''',
                 returnStdout: true
@@ -88,15 +89,16 @@ pipeline {
               set -e
               mkdir -p "${DEPLOY_DIR}/target" "${DEPLOY_DIR}/backups"
 
-              # Copy built jar to deploy dir with the expected name
-              cp "${BUILT_JAR}" "${DEPLOY_DIR}/target/${JAR_NAME}"
+              # Publish atomically so a running JVM never reads a half-written jar.
+              cp "${BUILT_JAR}" "${DEPLOY_DIR}/target/${JAR_NAME}.new"
+              mv -f "${DEPLOY_DIR}/target/${JAR_NAME}.new" "${DEPLOY_DIR}/target/${JAR_NAME}"
 
               # Copy compose into deploy dir so docker compose can find it
               cp compose.yaml "${DEPLOY_DIR}/compose.yaml"
 
               cd "${DEPLOY_DIR}"
               ls -la
-              docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
+              docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --force-recreate --remove-orphans
               docker compose -f compose.yaml ps
             '''
           }
@@ -110,13 +112,13 @@ pipeline {
                     def ok = sh(
                         script: '''
                             set +e
-                            for i in $(seq 1 3); do
+                            for i in $(seq 1 20); do
                                 curl -fsS "${HEALTH_URL}" | grep -q '"status":"UP"'
                                 if [ $? -eq 0 ]; then
                                     echo "UP"
                                     exit 0
                                 fi
-                                echo "Waiting for app... ($i/3)"
+                                echo "Waiting for app... ($i/20)"
                                 sleep 3
                             done
                             echo "DOWN"
@@ -163,9 +165,10 @@ pipeline {
                         fi
 
                         echo "Rolling back using $LAST_BACKUP"
-                        cp "$LAST_BACKUP" "${DEPLOY_DIR}/target/${JAR_NAME}"
+                        cp "$LAST_BACKUP" "${DEPLOY_DIR}/target/${JAR_NAME}.rollback"
+                        mv -f "${DEPLOY_DIR}/target/${JAR_NAME}.rollback" "${DEPLOY_DIR}/target/${JAR_NAME}"
 
-                        docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --remove-orphans
+                        docker compose -f compose.yaml --profile "${COMPOSE_PROFILE}" up -d --force-recreate --remove-orphans
 
                         # Re-check health after rollback
                         for i in $(seq 1 20); do
