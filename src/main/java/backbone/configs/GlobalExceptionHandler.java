@@ -1,6 +1,7 @@
 package backbone.configs;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.net.URI;
 import java.nio.file.AccessDeniedException;
@@ -78,15 +80,34 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
     }
 
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<?> handleNoResourceFound(NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleUnknown(Exception exception, HttpServletRequest request) {
         String cid = MDC.get("correlationId");
-        String sessionId = request.getSession().getId();
 
-        log.error("[{}] Unhandled exception at {} cid={} ", sessionId, request.getRequestURI(), cid, exception);
+        HttpSession session = request.getSession(false);
+        String sessionId = session != null ? session.getId() : null;
 
-        ProblemDetail problemDetail = this.base(HttpStatus.INTERNAL_SERVER_ERROR, "internal server error", exception, request);
+        log.error("[{}] Unhandled exception at {} cid={}",
+                sessionId,
+                request.getRequestURI(),
+                cid,
+                exception
+        );
+
+        ProblemDetail problemDetail = this.base(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "internal server error",
+                exception,
+                request
+        );
         problemDetail.setProperty("code", "internal_server_error");
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(problemDetail);
     }
+
 }
