@@ -1,11 +1,45 @@
 services:
+  otel-agent:
+    image: curlimages/curl:8.11.1
+    container_name: backbone-otel-agent
+    command:
+      - sh
+      - -c
+      - test -f /otel/opentelemetry-javaagent.jar || curl -fsSL -o /otel/opentelemetry-javaagent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
+    volumes:
+      - otel-agent:/otel
+    profiles:
+      - prod
+      - observability
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    container_name: backbone-otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    environment:
+      - ELASTIC_OTLP_ENDPOINT=${ELASTIC_OTLP_ENDPOINT:-http://host.docker.internal:9200/_otlp}
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - '4317:4317'
+      - '4318:4318'
+      - '13133:13133'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    networks:
+      - dbnet
+    profiles:
+      - prod
+      - observability
+
   spring-app:
     image: eclipse-temurin:17-jdk
     container_name: spring-backbone
     working_dir: /app
     volumes:
       - /srv/backbone/target:/app
-    command: ["java", "-jar", "/app/backbone.jar"]
+      - otel-agent:/otel:ro
+    command: ["java", "-javaagent:/otel/opentelemetry-javaagent.jar", "-jar", "/app/backbone.jar"]
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATA_MONGODB_URI=${MONGODB_URI}
@@ -14,10 +48,25 @@ services:
       - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
       - SPOTIFY_REDIRECT_URI=${SPOTIFY_REDIRECT_URI}
       - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - OTEL_SERVICE_NAME=backbone
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+      - OTEL_INSTRUMENTATION_RUNTIME_METRICS_ENABLED=true
+      - OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED=true
+      - OTEL_INSTRUMENTATION_LOGBACK_APPENDER_EXPERIMENTAL_LOG_ATTRIBUTES=true
+      - OTEL_RESOURCE_ATTRIBUTES=deployment.environment=local
     ports:
       - '8000:8000'
     networks:
       - dbnet
+    depends_on:
+      otel-agent:
+        condition: service_completed_successfully
+      otel-collector:
+        condition: service_started
     profiles:
       - prod
 
@@ -25,5 +74,6 @@ networks:
   dbnet:
     external: true
 
-
+volumes:
+  otel-agent:
 
