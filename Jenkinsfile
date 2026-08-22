@@ -87,11 +87,15 @@ pipeline {
           steps {
             sh '''
               set -e
-              mkdir -p "${DEPLOY_DIR}/target" "${DEPLOY_DIR}/backups"
+              mkdir -p "${DEPLOY_DIR}/target" "${DEPLOY_DIR}/backups" "${DEPLOY_DIR}/otel"
 
               # Publish atomically so a running JVM never reads a half-written jar.
               cp "${BUILT_JAR}" "${DEPLOY_DIR}/target/${JAR_NAME}.new"
               mv -f "${DEPLOY_DIR}/target/${JAR_NAME}.new" "${DEPLOY_DIR}/target/${JAR_NAME}"
+
+              # Publish the OTel Java agent the same way, atomically.
+              cp .otel/opentelemetry-javaagent.jar "${DEPLOY_DIR}/otel/opentelemetry-javaagent.jar.new"
+              mv -f "${DEPLOY_DIR}/otel/opentelemetry-javaagent.jar.new" "${DEPLOY_DIR}/otel/opentelemetry-javaagent.jar"
 
               # Copy compose into deploy dir so docker compose can find it
               cp compose.yaml "${DEPLOY_DIR}/compose.yaml"
